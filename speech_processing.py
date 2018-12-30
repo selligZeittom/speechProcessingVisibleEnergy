@@ -41,7 +41,6 @@ def interact_with_device(recognizer, microphone):
     try:
         response["success"] = True
         response["transcription"] = recognizer.recognize_google(audio, language="fr-CH")
-        print response["transcription"]
     except sr.RequestError:
         # API was unreachable or unresponsive
         response["success"] = False
@@ -67,7 +66,7 @@ def word_detected():
     m = sr.Microphone()
     for i in range(10):
         res = interact_with_device(r, m)
-        print res["transcription"]
+        print(u"You said: {}".format(res["transcription"]))
 
 
 if __name__ == "__main__":
