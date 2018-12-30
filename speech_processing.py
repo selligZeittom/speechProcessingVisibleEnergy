@@ -55,10 +55,12 @@ def interact_with_device(recognizer, microphone):
     return response
 
 
-def word_detected():
-    print("got the keyword ! time to stop the detector now")
-    # first stop the detector as it's currently using the mic
-    detector.terminate()
+def start_word_detected():
+    print("got the start keyword !")
+    # first terminate the start detector
+    startDetector.terminate()
+    # now start the stop detector
+
     # then start recognizing
     print("now time to start the talk ! ")
     # obtain audio from the microphone
@@ -69,6 +71,16 @@ def word_detected():
         print(u"You said: {}".format(res["transcription"]))
 
 
+def stop_word_detected():
+    print("got the stop keyword !")
+    # first terminate the stop detector
+    stopDetector.terminate()
+    # now start the start detector
+    startDetector.start(detected_callback=start_word_detected,
+                        interrupt_check=interrupt_callback,
+                        sleep_time=0.03)
+
+
 if __name__ == "__main__":
 
     if len(sys.argv) == 1:
@@ -76,17 +88,18 @@ if __name__ == "__main__":
         print("Usage: python demo.py your.model")
         sys.exit(-1)
 
-    model = sys.argv[1]
+    startModel = sys.argv[1]    # start model, the one that launches the interaction
+    stopModel = sys.argv[2]  # end model, stops the interaction
 
     # capture SIGINT signal, e.g., Ctrl+C
     signal.signal(signal.SIGINT, signal_handler)
 
-    detector = snowboydecoder.HotwordDetector(model, sensitivity=0.5)
+    startDetector = snowboydecoder.HotwordDetector(startModel, sensitivity=0.5)
+    # stopDetector = snowboydecoder.HotwordDetector(stopModel, sensitivity=0.5)
     print('Listening... Press Ctrl+C to exit')
 
     # start the thread of the detector
-    detector.start(detected_callback=word_detected,
-                   interrupt_check=interrupt_callback,
-                   sleep_time=0.03)
+    startDetector.start(detected_callback=start_word_detected,
+                        interrupt_check=interrupt_callback,
+                        sleep_time=0.03)
 
-    detector.terminate()
