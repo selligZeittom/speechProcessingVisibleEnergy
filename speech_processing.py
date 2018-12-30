@@ -17,6 +17,45 @@ def interrupt_callback():
     return interrupted
 
 
+def interact_with_device(recognizer, microphone):
+    # check that recognizer and microphone arguments are appropriate type
+    if not isinstance(recognizer, sr.Recognizer):
+        raise TypeError("`recognizer` must be `Recognizer` instance")
+
+    if not isinstance(microphone, sr.Microphone):
+        raise TypeError("`microphone` must be `Microphone` instance")
+
+    with microphone as source:
+        recognizer.adjust_for_ambient_noise(source, duration=0.5)
+        print "let's talk to the device !"
+        audio = recognizer.listen(source, timeout=1, phrase_time_limit=1)
+
+    # set up the response object
+    response = {
+        "success": True,
+        "error": None,
+        "transcription": None
+    }
+
+    # fill the enum with the results
+    try:
+        response["success"] = True
+        response["transcription"] = recognizer.recognize_google(audio, language="fr-CH")
+        print response["transcription"]
+    except sr.RequestError:
+        # API was unreachable or unresponsive
+        response["success"] = False
+        response["error"] = "API unavailable"
+        print response["error"]
+    except sr.UnknownValueError:
+        # speech was unintelligible
+        response["success"] = False
+        response["error"] = "Unable to recognize speech"
+        print response["error"]
+
+    return response
+
+
 def word_detected():
     print("got the keyword ! time to stop the detector now")
     # first stop the detector as it's currently using the mic
@@ -25,19 +64,10 @@ def word_detected():
     print("now time to start the talk ! ")
     # obtain audio from the microphone
     r = sr.Recognizer()
-    # reset mic
-    with sr.Microphone() as source:
-        print("Say something!")
-        # audio = r.listen(source)
-        r.adjust_for_ambient_noise(source, duration=0.5)
-        audio = r.listen(source, timeout=1, phrase_time_limit=2)
-    # speech to text now
-    try:
-        print("Sphinx thinks you said " + r.recognize_google(audio))
-    except sr.UnknownValueError:
-        print("Sphinx could not understand audio")
-    except sr.RequestError as e:
-        print("Sphinx error; {0}".format(e))
+    m = sr.Microphone()
+    for i in range(10):
+        res = interact_with_device(r, m)
+        print res["transcription"]
 
 
 if __name__ == "__main__":
