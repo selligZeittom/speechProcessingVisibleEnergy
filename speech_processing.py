@@ -2,7 +2,7 @@ import snowboydecoder
 import sys
 import signal
 import speech_recognition as sr
-
+import unicodedata
 
 interrupted = False
 
@@ -63,35 +63,35 @@ def interact_with_device(recognizer, microphone):
 
 
 def process_result(result):
-    print "let's process the result : "
     text = str(result)  # cast into string
     text.lower()
+    # text = unicodedata.normalize('ASCII', text)
+    print text
 
     # means that the user wants to stop the interaction with the device
     if text.__contains__("stop"):
+        print "[cmd] : stop"
         global stop_word_detected
         stop_word_detected = True
         return True
 
-    # switching mode
-    elif text.__contains__("mode"):
-        if text.__contains__("panneau") or text.__contains__("solaire"):
-            print "[mode switch] : solar pannel mode"
-            return True
-        elif text.__contains__("import") or text.__contains__("importations"):
-            print "[mode switch] : import mode"
-            return True
-        elif text.__contains__("export") or text.__contains__("exportation"):
-            print "[mode switch] : export mode"
-            return True
-        else:
-            return False
-
-    # display time of the day
-    elif text.__contains__("heure"):
-        print "[mode switch] : time mode"
+    # switch mode
+    elif text.__contains__("mode") and (text.__contains__("panneau") or text.__contains__("solaire") or text.__contains__("production")):
+        print "[cmd switch] : solar panel mode"
         return True
-
+    elif text.__contains__("mode") and text.__contains__("import"):
+        print "[cmd switch] : import mode"
+        return True
+    elif text.__contains__("mode") and text.__contains__("export"):
+        print "[cmd switch] : export mode"
+        return True
+    elif text.__contains__("heure"):
+        print "[cmd switch] : time mode"
+        return True
+    # set an alarm
+    elif text.__contains__("reveil") or text.__contains__("alarm"):
+        print "[cmd set] : set an alarm"
+        return True
     # wrong command
     else:
         print "vocal command is not valid... try again ! "
@@ -122,11 +122,8 @@ def start_word_detected():
     # if we come here : means that interaction is over
     global stop_word_detected
     stop_word_detected = False
-    # start again the thread of the detector
-    startDetector.start(detected_callback=start_word_detected,
-                        interrupt_check=interrupt_callback,
-                        sleep_time=0.03)
-    print "detector started again"
+
+    print "back to detecting hotword"
 
 
 if __name__ == "__main__":
