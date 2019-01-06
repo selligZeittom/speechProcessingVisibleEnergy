@@ -29,6 +29,7 @@ def interact_with_device(recognizer, microphone):
         raise TypeError("`microphone` must be `Microphone` instance")
 
     with microphone as source:
+        # adjust to the ambient noise
         recognizer.adjust_for_ambient_noise(source, duration=0.5)
         print "let's talk to the device !"
 
@@ -39,6 +40,7 @@ def interact_with_device(recognizer, microphone):
             "transcription": None
         }
 
+        # if there is sth to listen...
         try:
             audio = recognizer.listen(source, timeout=3, phrase_time_limit=1)
         except sr.WaitTimeoutError:
@@ -100,7 +102,6 @@ def start_word_detected():
     print("got the start keyword !")
     # first terminate the start detector
     startDetector.terminate()
-    # now start the stop detector
 
     # then start recognizing
     print("now time to start the talk ! ")
