@@ -1,8 +1,8 @@
+# -*- coding: latin-1 -*-
 import snowboydecoder
 import sys
 import signal
 import speech_recognition as sr
-import unicodedata
 
 interrupted = False
 
@@ -63,10 +63,8 @@ def interact_with_device(recognizer, microphone):
 
 
 def process_result(result):
-    text = str(result)  # cast into string
+    text = unicode(result)  # cast into unicode
     text.lower()
-    # text = unicodedata.normalize('ASCII', text)
-    print text
 
     # means that the user wants to stop the interaction with the device
     if text.__contains__("stop"):
@@ -89,7 +87,7 @@ def process_result(result):
         print "[cmd switch] : time mode"
         return True
     # set an alarm
-    elif text.__contains__("reveil") or text.__contains__("alarm"):
+    elif text.__contains__(u"réveil") or text.__contains__("alarm"):
         print "[cmd set] : set an alarm"
         return True
     # wrong command
@@ -115,7 +113,7 @@ def start_word_detected():
         # if no exception was launched
         if res["error"] is None:
             print(u"You said: {}".format(res["transcription"]))
-            processed = process_result(res)
+            processed = process_result(res["transcription"])
             if processed is True or stop_word_detected is True:
                 break
 
@@ -124,6 +122,12 @@ def start_word_detected():
     stop_word_detected = False
 
     print "back to detecting hotword"
+    # start the thread of the detector
+    global startDetector
+    startDetector = snowboydecoder.HotwordDetector(startModel, sensitivity=0.5)
+    startDetector.start(detected_callback=start_word_detected,
+                        interrupt_check=interrupt_callback,
+                        sleep_time=0.03)
 
 
 if __name__ == "__main__":
@@ -139,10 +143,10 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
 
     startDetector = snowboydecoder.HotwordDetector(startModel, sensitivity=0.5)
-    print('Listening... Press Ctrl+C to exit')
 
     # start the thread of the detector
     startDetector.start(detected_callback=start_word_detected,
                         interrupt_check=interrupt_callback,
                         sleep_time=0.03)
+    print('Listening... Press Ctrl+C to exit')
 
